@@ -1,11 +1,7 @@
-import 'package:first_app/ipaddressfield.dart';
-import 'package:flutter/material.dart';
 import 'dart:io';
-import 'dart:async';
-import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_masked_text/flutter_masked_text.dart';
 
 void main() {
   runApp(DisplayApp());
@@ -25,6 +21,7 @@ class DisplayAppState extends State<DisplayApp> {
   final messageFieldController = TextEditingController();
   final portFieldController = TextEditingController();
   final ipAddressFieldController = TextEditingController();
+  var context;
 
   @override
   void dispose() {
@@ -34,6 +31,7 @@ class DisplayAppState extends State<DisplayApp> {
   }
 
   Widget build(BuildContext context) {
+    this.context = context;
     this.ipAddressField = TextField(
         decoration: new InputDecoration(labelText: "IP Address"),
         keyboardType: TextInputType.number,
@@ -66,7 +64,7 @@ class DisplayAppState extends State<DisplayApp> {
             )));
   }
 
-  void sendToDisplayDevice() {
+  void sendToDisplayDevice() async {
     print("Send to Device" +
         ipAddressFieldController.text +
         " " +
@@ -74,12 +72,34 @@ class DisplayAppState extends State<DisplayApp> {
         " " +
         portFieldController.text);
 
-    Socket.connect(
-            ipAddressFieldController.text, int.parse(portFieldController.text))
-        .then((socket) {
-      print("Sending message");
-      socket.write("Testmessage");
-      socket.destroy();
-    });
+    // Duration socketConnectionTimeout = new Duration(seconds: 5);
+    // Socket.connect(
+    //   ipAddressFieldController.text,
+    //   int.parse(portFieldController.text),
+
+    // ).then((socket) {
+    //   print("Sending message");
+    //   socket.write("Testmessage");
+    //   socket.flush();
+    //   socket.destroy();
+    // }).catchError((e) {
+    //   print("ASDAS" + e.error);
+    //   _showToast(context);
+    // });
+
+    try {
+      Socket deviceSocket = await Socket.connect(
+          ipAddressFieldController.text, int.parse(portFieldController.text));
+
+      deviceSocket.write(messageFieldController.text);
+
+      deviceSocket.flush();
+      deviceSocket.destroy();
+    } catch (e) {
+      print(e);
+      _showToast(context);
+    }
   }
+
+  void _showToast(BuildContext context) {}
 }
